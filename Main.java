@@ -7,7 +7,11 @@ public class Main {
 
     public static void main(String[] args) {
         int i;
-        for (i = 320; i < 321; i++) {
+        double coef=0;
+        double coef_total=0;
+        int count=0;
+        for (i = 64; i <= 512; i++) {
+            count++;
             a = new int[i][i];
             b = new int[i][i];
             c = new int[i][i];
@@ -21,15 +25,28 @@ public class Main {
 
 
             }
-            long mul = multiply(a, b);
-            long st = strassenmul(a, b);
-            if (st < mul) {
-                System.out.println("strassen threshold" + i + " " + mul + " " + st);
-                return;
-            }
-            System.out.println("loop finished " + i + " " + mul + " " + st);
-        }
+            long mul=0;
+            long st=0;
+            for(int j=0; j<5; j++){
+                mul += multiply(a, b);
 
+            }
+            for (int j=0; j<5; j++){
+                st += strassenmul(a, b);
+            }
+            double avgmul = mul / 5.0;//(5 * 10^3 find average then convert it to microsec)
+            double avgst  = st / 5.0;//(5 *10^3 find average then convert it to microsec)
+
+            if (avgst < avgmul) {
+                System.out.println("strassen threshold " + i + " " + avgmul + " " + avgst);
+            }else{
+                System.out.println("loop finished " + i + " " + avgmul + " " + avgst);
+            }
+            coef_total += avgst/Math.pow(i,2.81);
+
+        }
+        coef = coef_total/count;
+        System.out.println(coef);
 
     }
 
@@ -79,45 +96,19 @@ public class Main {
     }
 
     public static int[][] strassen(int[][] a, int[][] b) {
-
         int n = a.length;
         int[][] R = new int[n][n];
-        /** base case **/
+        /* if n is smaller than 65, do normal maxtrix multiplication */
         if (n <= 64){
             convmul(R,a,b,n);
         }
         else {
-            int[][] A11 = new int[n / 2][n / 2];
-            int[][] A12 = new int[n / 2][n / 2];
-            int[][] A21 = new int[n / 2][n / 2];
-            int[][] A22 = new int[n / 2][n / 2];
-            int[][] B11 = new int[n / 2][n / 2];
-            int[][] B12 = new int[n / 2][n / 2];
-            int[][] B21 = new int[n / 2][n / 2];
-            int[][] B22 = new int[n / 2][n / 2];
+            int[][] A11 = new int[n / 2][n / 2];int[][] A12 = new int[n / 2][n / 2];
+            int[][] A21 = new int[n / 2][n / 2];int[][] A22 = new int[n / 2][n / 2];
+            int[][] B11 = new int[n / 2][n / 2];int[][] B12 = new int[n / 2][n / 2];
+            int[][] B21 = new int[n / 2][n / 2];int[][] B22 = new int[n / 2][n / 2];
             divide(a,A11,A12,A21,A22);
             divide(b,B11,B12,B21,B22);
-            /** Dividing matrix A into 4 halves **/
-//            split(a, A11, 0, 0);
-//            split(a, A12, 0, n / 2);
-//            split(a, A21, n / 2, 0);
-//            split(a, A22, n / 2, n / 2);
-            /** Dividing matrix B into 4 halves **/
-//            split(b, B11, 0, 0);
-//            split(b, B12, 0, n / 2);
-//            split(b, B21, n / 2, 0);
-//            split(b, B22, n / 2, n / 2);
-
-            /**
-             M1 = (A11 + A22)(B11 + B22)
-             M2 = (A21 + A22) B11
-             M3 = A11 (B12 - B22)
-             M4 = A22 (B21 - B11)
-             M5 = (A11 + A12) B22
-             M6 = (A21 - A11) (B11 + B12)
-             M7 = (A12 - A22) (B21 + B22)
-             **/
-
             int[][] M1 = strassen(add(A11, A22), add(B11, B22));
             int[][] M2 = strassen(add(A21, A22), B11);
             int[][] M3 = strassen(A11, sub(B12, B22));
@@ -126,32 +117,19 @@ public class Main {
             int[][] M6 = strassen(sub(A21, A11), add(B11, B12));
             int[][] M7 = strassen(sub(A12, A22), add(B21, B22));
 
-            /**
-             C11 = M1 + M4 - M5 + M7
-             C12 = M3 + M5
-             C21 = M2 + M4
-             C22 = M1 - M2 + M3 + M6
-             **/
             int[][] C11 = add(sub(add(M1, M4), M5), M7);
             int[][] C12 = add(M3, M5);
             int[][] C21 = add(M2, M4);
             int[][] C22 = add(sub(add(M1, M3), M2), M6);
-
             merge(R,C11,C12,C21,C22);
-            /** join 4 halves into one result matrix **/
-//            join(C11, R, 0, 0);
-//            join(C12, R, 0, n / 2);
-//            join(C21, R, n / 2, 0);
-//            join(C22, R, n / 2, n / 2);
         }
-        /** return result **/
         return R;
     }
 
 
 
 
-    /** Funtion to sub two matrices **/
+    //subtract two matrices
     public static int[][] sub(int[][] A, int[][] B)
     {
         int n = A.length;
@@ -161,7 +139,7 @@ public class Main {
                 C[i][j] = A[i][j] - B[i][j];
         return C;
     }
-    /** Funtion to add two matrices **/
+    //add two matrices
     public static int[][] add(int[][] A, int[][] B)
     {
         int n = A.length;
@@ -184,13 +162,14 @@ public class Main {
                 d22[i][j] = d[i + n][j + n];
             }
     }
-    /** Funtion to split parent matrix into child matrices **/
+    //split parent matrices to child matrices
     public static void split(int[][] P, int[][] C, int iB, int jB)
     {
         for(int i1 = 0, i2 = iB; i1 < C.length; i1++, i2++)
             for(int j1 = 0, j2 = jB; j1 < C.length; j1++, j2++)
                 C[i1][j1] = P[i2][j2];
     }
+    //copy child matrices to form parent elements
     public static int[][] merge(int[][] a,int[][] a11, int[][] a12, int[][] a21, int[][] a22){
         int i,j;
         int n = a11.length;
@@ -204,13 +183,7 @@ public class Main {
             }
         return a;
     }
-    /** Funtion to join child matrices intp parent matrix **/
-    public static void join(int[][] C, int[][] P, int iB, int jB)
-    {
-        for(int i1 = 0, i2 = iB; i1 < C.length; i1++, i2++)
-            for(int j1 = 0, j2 = jB; j1 < C.length; j1++, j2++)
-                P[i2][j2] = C[i1][j1];
-    }
+
 
 }
 
