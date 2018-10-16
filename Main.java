@@ -7,43 +7,30 @@ public class Main {
 
     public static void main(String[] args) {
         int i;
+        int k=1024;
         double coef=0;
         double coef_total=0;
         int count=0;
-        for (i = 64; i <= 512; i++) {
+        for (i = 33; i <= k; i++) {
             count++;
-            a = new int[i][i];
-            b = new int[i][i];
-            c = new int[i][i];
+            a = new int[i][i];b = new int[i][i];c = new int[i][i];
             for (int j = 0; j < i; j++) {
-                // do the for in the row according to the column size
-                for (int k = 0; k < i; k++) {
-                    // multiple the random by 10 and then cast to in
-                    a[j][k] = (int) Math.round(Math.random() * 10);
-                    b[j][k] = (int) Math.round(Math.random() * 10);
+                for (int l = 0; l < i; l++) {
+                    a[j][l] = (int) Math.round(Math.random() * 10);
+                    b[j][l] = (int) Math.round(Math.random() * 10);
                 }
-
-
             }
-            long mul=0;
-            long st=0;
-            for(int j=0; j<5; j++){
-                mul += multiply(a, b);
-
-            }
-            for (int j=0; j<5; j++){
-                st += strassenmul(a, b);
-            }
-            double avgmul = mul / 5.0;//(5 * 10^3 find average then convert it to microsec)
-            double avgst  = st / 5.0;//(5 *10^3 find average then convert it to microsec)
-
+            long mul=0;long st=0;
+            mul = multiply(a, b);
+            st = strassenmul(a, b);
+            double avgmul = mul;
+            double avgst  = st;
             if (avgst < avgmul) {
                 System.out.println("strassen threshold " + i + " " + avgmul + " " + avgst);
             }else{
                 System.out.println("loop finished " + i + " " + avgmul + " " + avgst);
             }
             coef_total += avgst/Math.pow(i,2.81);
-
         }
         coef = coef_total/count;
         System.out.println(coef);
@@ -61,12 +48,6 @@ public class Main {
                 }
             }
         }
-//        for(i=0; i<c.length; i++){
-//            for(j=0; j<c[0].length; j++){
-//                System.out.print(c[i][j] + " ");
-//            }
-//            System.out.println();
-//        }
         long estimatedTime = System.nanoTime() - startTime;
 
         return estimatedTime;
@@ -85,12 +66,6 @@ public class Main {
     public static long strassenmul(int[][] a, int[][] b) {
         long startTime = System.nanoTime();
         int[][] c = strassen(a, b);
-//        for(int i=0; i<c.length; i++){
-//            for(int j=0; j<c[0].length; j++){
-//                System.out.print(c[i][j] + " ");
-//            }
-//            System.out.println();
-//        }
         long estimatedTime = System.nanoTime() - startTime;
         return estimatedTime;
     }
@@ -99,7 +74,7 @@ public class Main {
         int n = a.length;
         int[][] R = new int[n][n];
         /* if n is smaller than 65, do normal maxtrix multiplication */
-        if (n <= 64){
+        if (n <= 32){
             convmul(R,a,b,n);
         }
         else {
